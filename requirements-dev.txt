@@ -1,0 +1,4 @@
+mycli # A command-line client for MySQL with autocompletion and syntax highlighting
+ipython # An enhanced interactive Python shell for better debugging and testing
+autopep8 # A tool to automatically format Python code to conform to PEP 8 style guide
+psutil # A package to provide information about system utilization (CPU, memory, etc.), helpful for profiling.
