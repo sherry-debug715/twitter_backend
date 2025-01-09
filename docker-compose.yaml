@@ -1,0 +1,71 @@
+version: "3"
+services:
+  mysql8:
+    platform: linux/amd64 # Specify the platform for compatibility.
+    container_name: mysql8
+    image: mysql:8.0 # Pull MySQL 8.0 image from Docker Hub.
+    ports:
+      - "3306:3306" # Host port:Container port
+    restart: always # Always restart the container unless it is stopped manually.
+    volumes:
+      - ${HOME}/local/mysql/data:/var/lib/mysql # Persist MySQL data on the host.
+    environment:
+      MYSQL_ROOT_PASSWORD: password 
+      MYSQL_DATABASE: twitter
+    networks:
+      - shared_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379" # Default Redis port mapping.
+    volumes:
+      - /usr/local/redis/data:/data # Persist Redis data on the host.
+      - ./redis.conf:/etc/redis/redis.conf # Mount your custom Redis configuration file.
+    restart: always
+    command: redis-server /etc/redis/redis.conf # Start Redis with your custom config.
+    networks:
+      - shared_network
+
+  memcached:
+    container_name: memcached
+    image: memcached:latest
+    restart: always
+    ports:
+      - "11211:11211" # Default Memcached port mapping.
+    networks:
+      - shared_network
+  
+  twitter:
+    container_name: twitter
+    image: sherry/twitter
+    tty: true
+    build: .
+    ports:
+      - "8000:8000" # 这里的端口改为和 python manage.py runserver 0.0.0.0:8000  一样的端口才行
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      mysql8:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      memcached:
+        condition: service_started
+    environment:
+      - DB_HOST=mysql8
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
