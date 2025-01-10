@@ -1,4 +1,40 @@
-mycli # A command-line client for MySQL with autocompletion and syntax highlighting
-ipython # An enhanced interactive Python shell for better debugging and testing
-autopep8 # A tool to automatically format Python code to conform to PEP 8 style guide
-psutil # A package to provide information about system utilization (CPU, memory, etc.), helpful for profiling.
+asgiref==3.8.1
+asttokens==3.0.0
+autopep8==2.3.1
+cffi==1.17.1
+cli_helpers==2.3.1
+click==8.1.8
+configobj==5.0.9
+cryptography==44.0.0
+decorator==5.1.1
+Django==5.1.4
+djangorestframework==3.15.2
+exceptiongroup==1.2.2
+executing==2.1.0
+ipython==8.31.0
+jedi==0.19.2
+matplotlib-inline==0.1.7
+mycli==1.29.2
+mysqlclient==2.2.6
+parso==0.8.4
+pexpect==4.9.0
+prompt_toolkit==3.0.48
+psutil==6.1.1
+ptyprocess==0.7.0
+pure_eval==0.2.3
+pyaes==1.6.1
+pycodestyle==2.12.1
+pycparser==2.22
+pyfzf==0.3.1
+Pygments==2.19.1
+PyMySQL==1.0.2
+pyperclip==1.9.0
+pytz==2024.2
+sqlglot==26.1.3
+sqlparse==0.4.4
+stack-data==0.6.3
+tabulate==0.9.0
+tomli==2.2.1
+traitlets==5.14.3
+typing_extensions==4.12.2
+wcwidth==0.2.13
