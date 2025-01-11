@@ -30,7 +30,10 @@ class AccountViewSet(viewsets.ViewSet):
         methods=["GET"], detail=False
     )  # when setting primary key or other params, detail need to be set to True
     def login_status(self, request):
-        data = {"has_logged_in": request.user.is_authenticated}
+        data = {
+            "has_logged_in": request.user.is_authenticated,
+            "ip": request.META["REMOTE_ADDR"]
+        }
         if request.user.is_authenticated:
             data["user"] = UserSerializer(request.user).data
         return Response(data)  # Response default status code is 200

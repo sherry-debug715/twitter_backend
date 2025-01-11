@@ -1,6 +1,7 @@
 asgiref==3.8.1
 asttokens==3.0.0
 autopep8==2.3.1
+black @ git+https://github.com/psf/black@8dc912774e322a2cd46f691f19fb91d2237d06e2
 cffi==1.17.1
 cli_helpers==2.3.1
 click==8.1.8
@@ -8,6 +9,7 @@ configobj==5.0.9
 cryptography==44.0.0
 decorator==5.1.1
 Django==5.1.4
+django-debug-toolbar==4.4.6
 djangorestframework==3.15.2
 exceptiongroup==1.2.2
 executing==2.1.0
@@ -15,9 +17,13 @@ ipython==8.31.0
 jedi==0.19.2
 matplotlib-inline==0.1.7
 mycli==1.29.2
+mypy-extensions==1.0.0
 mysqlclient==2.2.6
+packaging==24.2
 parso==0.8.4
+pathspec==0.12.1
 pexpect==4.9.0
+platformdirs==4.3.6
 prompt_toolkit==3.0.48
 psutil==6.1.1
 ptyprocess==0.7.0
