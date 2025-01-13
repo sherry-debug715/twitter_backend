@@ -8,6 +8,12 @@ class Tweet(models.Model):
     content = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "created_at"]),
+        ]
+        ordering = ("user", "-created_at")
+
     @property
     def hours_to_now(self):
         # datetime.now doesn't have time zone information, therefore using utc_now()

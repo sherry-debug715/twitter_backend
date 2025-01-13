@@ -13,13 +13,13 @@ class AccountApiTests(TestCase):
 
     def setUp(self): # invoked everytime AccountApiTests runs 
         self.client = APIClient()
-        self.user = self.createUser(
+        self.user = self.create_user(
             username="test_user",
             email="test_user@gamil.com",
             password="password"
         )
     
-    def createUser(self, username, email, password):
+    def create_user(self, username, email, password):
         # use create_user to encrypt password 
         return User.objects.create_user(username, email, password) 
     
