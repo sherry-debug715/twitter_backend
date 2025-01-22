@@ -14,6 +14,10 @@ class UserSerializerForTweet(serializers.ModelSerializer):
         fields = ("id", "username")
 
 
+class UserSerializerForFriendship(UserSerializerForTweet):
+    pass
+
+
 class LoginSerializer(serializers.Serializer):
     # make sure login request has username and password
     username = serializers.CharField()
