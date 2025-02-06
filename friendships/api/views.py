@@ -12,6 +12,7 @@ from .serializers import (
 from django.contrib.auth.models import User 
 
 class FriendshipViewSet(viewsets.GenericViewSet):
+    serializer_class = FriendshipSerializerForCreate
     queryset = User.objects.all()
 
     @action(methods=["GET"], detail=True, permission_classes=[AllowAny])
@@ -35,6 +36,8 @@ class FriendshipViewSet(viewsets.GenericViewSet):
     
     @action(methods=["POST"], detail=True, permission_classes=[IsAuthenticated])
     def follow(self, request, pk):
+        # get_object will pass pk into serializer and check if user with the pk exist, if not, it throughs a 404 error
+        self.get_object() 
         # handling repeat follow, for example, follow button pressed multiple times 
         if Friendship.objects.filter(from_user=request.user, to_user=pk).exists():
             return Response({
@@ -52,15 +55,18 @@ class FriendshipViewSet(viewsets.GenericViewSet):
                 "success": False,
                 "errors": serializer.errors,
             }, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response({
-            "success": True,
-        }, status=status.HTTP_201_CREATED)
+        
+        instance = serializer.save()
+        return Response(
+            FollowingSerializer(instance).data,
+            status=status.HTTP_201_CREATED
+        )
     
     @action(methods=["POST"], detail=True, permission_classes=[IsAuthenticated])
     def unfollow(self, request, pk):
+        unfollow_user = self.get_object()
         # pk is a str, need to be converted to int
-        if request.user.id == int(pk):
+        if request.user.id == unfollow_user.id:
             return Response({
                 "success": False,
                 "message": "You cannot unfollow yourself",
@@ -69,7 +75,7 @@ class FriendshipViewSet(viewsets.GenericViewSet):
         # delete() returns two data, 1, how many data is removed; 2. how many of each type of data is removed 
         deleted, _ = Friendship.objects.filter(
             from_user=request.user,
-            to_user=pk,
+            to_user=unfollow_user,
         ).delete()
         return Response({"success": True, "deleted": deleted})
     
