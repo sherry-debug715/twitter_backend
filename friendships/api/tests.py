@@ -1,7 +1,7 @@
 from friendships.models import Friendship
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
-from django.test import TestCase
+from testing.testcase import TestCase
 
 FOLLOW_URL = "/api/friendships/{}/follow/"
 UNFOLLOW_URL = "/api/friendships/{}/unfollow/"
@@ -12,8 +12,6 @@ FOLLOWING_URL = "/api/friendships/{}/followings/"
 class FriendshipApiTests(TestCase):
 
     def setUp(self):
-        self.anonymous_client = APIClient() 
-
         self.sherry = self.create_user("sherry")
         self.sherry_client = APIClient()
         self.sherry_client.force_authenticate(self.sherry)
