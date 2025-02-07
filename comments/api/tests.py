@@ -1,6 +1,7 @@
 from testing.testcase import TestCase 
 from rest_framework.test import APIClient
 from django.utils import timezone
+from comments.models import Comment
 
 COMMENT_URL = "/api/comments/"
 
@@ -90,6 +91,23 @@ class CommentModelTests(TestCase):
         self.assertEqual(comment.created_at, before_created_at)
         self.assertNoLogs(comment.updated_at, before_updated_at)
         self.assertNotEqual(comment.created_at, now)
+
+    def test_destroy(self):
+        comment = self.create_comment(self.sherry, self.tweet)
+        url = "{}{}/".format(COMMENT_URL, comment.id)
+
+        response = self.anonymous_client.delete(url)
+        self.assertEqual(response.status_code, 403)
+
+        # only the creator of the comment can delete 
+        response = self.panda_client.delete(url)
+        self.assertEqual(response.status_code, 403)
+
+        count = Comment.objects.count()
+        response = self.sherry_client.delete(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Comment.objects.count(), count - 1)
+
 
 
 

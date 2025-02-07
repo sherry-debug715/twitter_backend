@@ -61,3 +61,9 @@ class CommentViewSet(viewsets.GenericViewSet):
             CommentSerializer(comment).data,
             status=status.HTTP_200_OK,
         )
+    
+    def destroy(self, request, *args, **kwargs):
+        comment = self.get_object()
+        comment.delete()
+        # DRF destroy default return code is 204 no content, return success=True will help the frontend see clearly that the delete is successful 
+        return Response({"success": True}, status=status.HTTP_200_OK)
