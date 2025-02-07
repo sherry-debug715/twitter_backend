@@ -11,8 +11,6 @@ TWEET_CREATE_API = "/api/tweets/"
 class TweetApiTests(TestCase):
 
     def setUp(self):
-        self.anoymous_client = APIClient()
-
         self.user1 = self.create_user(
             "user1",
             "user1@gmail.com",
@@ -36,14 +34,14 @@ class TweetApiTests(TestCase):
 
     def test_list_api(self):
         # TEST 1: making request without user_id
-        response = self.anoymous_client.get(TWEET_LIST_API)
+        response = self.anonymous_client.get(TWEET_LIST_API)
         self.assertEqual(response.status_code, 400)
 
         # TEST 2: making successful request 
-        response = self.anoymous_client.get(TWEET_LIST_API, {"user_id": self.user1.id})
+        response = self.anonymous_client.get(TWEET_LIST_API, {"user_id": self.user1.id})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["tweets"]), 3)
-        response = self.anoymous_client.get(TWEET_LIST_API, {"user_id": self.user2.id})
+        response = self.anonymous_client.get(TWEET_LIST_API, {"user_id": self.user2.id})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["tweets"]), 2)
 
@@ -53,7 +51,7 @@ class TweetApiTests(TestCase):
 
     def test_create_api(self):
         # TEST 1: testing log in 
-        response = self.anoymous_client.post(TWEET_CREATE_API)
+        response = self.anonymous_client.post(TWEET_CREATE_API)
         self.assertEqual(response.status_code, 403) 
 
         # TEST 2: without content 
