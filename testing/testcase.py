@@ -9,9 +9,13 @@ class TestCase(DjangoTestCase):
 
     @property
     def anonymous_client(self):
+         # Check if the instance already has an attribute _anonymous_client
         if hasattr(self, "_anonymous_client"):
+            # Return the existing _anonymous_client
             return self._anonymous_client 
+        # Otherwise, create and store it
         self._anonymous_client = APIClient()
+        # Return the new _anonymous_client
         return self._anonymous_client
     
     def create_user(self, username, email=None, password=None):
