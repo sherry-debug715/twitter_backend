@@ -23,4 +23,4 @@ class Comment(models.Model):
         ]
 
     def __str__(self):
-        return "{} - {} says {} at tweet {}".format(self.created_at, self.user, self.content, self.tweet)
+        return "{} - {} says {} at tweet {}".format(self.created_at, self.user, self.content, self.tweet_id)
