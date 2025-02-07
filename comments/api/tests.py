@@ -108,6 +108,38 @@ class CommentModelTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Comment.objects.count(), count - 1)
 
+    def test_list(self):
+        # withtout sending tweet_id
+        response = self.anonymous_client.get(COMMENT_URL)
+        self.assertEqual(response.status_code, 400) 
+
+        # initially there are no comment 
+        response = self.anonymous_client.get(COMMENT_URL, {
+            "tweet_id": self.tweet.id,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data["comments"]), 0) 
+
+        # returned comments should be ordered by created at descendingly 
+        self.create_comment(self.sherry, self.tweet, "1")
+        self.create_comment(self.panda,  self.tweet, "2")
+        self.create_comment(self.sherry, self.create_tweet(self.panda), "3")
+        response = self.anonymous_client.get(COMMENT_URL, {
+            "tweet_id": self.tweet.id,
+        })
+        self.assertEqual(len(response.data["comments"]), 2)
+        self.assertEqual(response.data["comments"][0]["content"], "1")
+        self.assertEqual(response.data["comments"][1]["content"], "2")
+
+        # when passed both tweet_id and user_id to param, only tweet_id will be recognized by django filter 
+        response = self.anonymous_client.get(COMMENT_URL, {
+            "tweet_id": self.tweet.id,
+            "user_id": self.sherry.id,
+        })
+
+        self.assertEqual(len(response.data["comments"]), 2)
+        
+
 
 
 
