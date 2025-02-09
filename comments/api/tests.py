@@ -17,6 +17,7 @@ class CommentModelTests(TestCase):
         self.panda_client.force_authenticate(self.panda)
 
         self.tweet = self.create_tweet(self.sherry)
+        self.comment = self.create_comment(self.sherry, self.tweet, "1")
 
     def test_comment_model(self):
         user = self.panda
@@ -113,21 +114,21 @@ class CommentModelTests(TestCase):
         response = self.anonymous_client.get(COMMENT_URL)
         self.assertEqual(response.status_code, 400) 
 
-        # initially there are no comment 
+        # only one comment is created in setup
         response = self.anonymous_client.get(COMMENT_URL, {
             "tweet_id": self.tweet.id,
         })
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data["comments"]), 0) 
+        self.assertEqual(len(response.data["comments"]), 1) 
 
         # returned comments should be ordered by created at descendingly 
-        self.create_comment(self.sherry, self.tweet, "1")
-        self.create_comment(self.panda,  self.tweet, "2")
+        self.create_comment(self.sherry, self.tweet, "2")
+        self.create_comment(self.panda,  self.tweet, "3")
         self.create_comment(self.sherry, self.create_tweet(self.panda), "3")
         response = self.anonymous_client.get(COMMENT_URL, {
             "tweet_id": self.tweet.id,
         })
-        self.assertEqual(len(response.data["comments"]), 2)
+        self.assertEqual(len(response.data["comments"]), 3)
         self.assertEqual(response.data["comments"][0]["content"], "1")
         self.assertEqual(response.data["comments"][1]["content"], "2")
 
@@ -137,7 +138,17 @@ class CommentModelTests(TestCase):
             "user_id": self.sherry.id,
         })
 
-        self.assertEqual(len(response.data["comments"]), 2)
+        self.assertEqual(len(response.data["comments"]), 3)
+
+    def test_like_set(self):
+        self.create_like(self.panda, self.comment)
+        self.assertEqual(self.comment.like_set.count(), 1)
+
+        self.create_like(self.panda, self.comment)
+        self.assertEqual(self.comment.like_set.count(), 1)
+
+        self.create_like(self.sherry, self.comment)
+        self.assertEqual(self.comment.like_set.count(), 2)
         
 
 
