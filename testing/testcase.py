@@ -27,7 +27,13 @@ class TestCase(DjangoTestCase):
         if email is None:
             email = "{}@gmail.com".format(username)
 
-        return User.objects.create_user(username, email, password) 
+        return User.objects.create_user(username, email, password)
+
+    def create_user_and_client(self, *args, **kwargs):
+        user = self.create_user(*args, **kwargs)
+        client = APIClient() 
+        client.force_authenticate(user)
+        return user, client 
     
     def create_tweet(self, user, content=None):
         if content is None:
