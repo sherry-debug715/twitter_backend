@@ -2,6 +2,10 @@ from testing.testcase import TestCase
 
 LIKE_BASE_URL = "/api/likes/"
 LIKE_CANCEL_URL = "/api/likes/cancel/"
+COMMENT_LIST_API = "/api/comments/"
+TWEET_LIST_API = "/api/tweets/"
+TWEET_DETAIL_API = "/api/tweets/{}/"
+NEWSFEED_LIST_API = "/api/newsfeeds/"
 
 class LikeApiTests(TestCase):
 
@@ -104,3 +108,26 @@ class LikeApiTests(TestCase):
         response = self.sherry_client.post(LIKE_CANCEL_URL, like_comment_data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(comment.like_set.count(), 0)
+
+    def test_likes_in_comment_api(self):
+        tweet = self.create_tweet(self.sherry)
+        comment = self.create_comment(self.sherry, tweet)
+
+        # anonymous user can also see tweets likes
+        response = self.anonymous_client.get(COMMENT_LIST_API, {"tweet_id": tweet.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["comments"][0]["has_liked"], False)
+        self.assertEqual(response.data["comments"][0]["like_count"], 0) 
+        
+        # create a new like for the comment 
+        self.create_like(self.panda, comment)
+        response = self.panda_client.get(COMMENT_LIST_API, {"tweet_id": tweet.id})
+        self.assertEqual(response.data["comments"][0]["has_liked"], True)
+        self.assertEqual(response.data["comments"][0]["like_count"], 1)
+
+        # test tweet detail api 
+        self.create_like(self.sherry, comment)
+        response = self.panda_client.get(TWEET_DETAIL_API.format(tweet.id))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["comments"][0]["has_liked"], True)
+        self.assertEqual(response.data["comments"][0]["like_count"], 2) 
