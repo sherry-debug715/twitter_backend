@@ -10,6 +10,13 @@ from .serializers import (
 )
 from newsfeeds.services import NewsFeedService
 from utils.decorators import required_params
+"""
+GET /api/tweets/ → calls the list() method
+GET /api/tweets/{id}/ → calls the retrieve() method (as in your case)
+POST /api/tweets/ → calls the create() method
+PUT /api/tweets/{id}/ → calls the update() method
+DELETE /api/tweets/{id}/ → calls the destroy() method
+"""
 
 class TweetViewSet(viewsets.GenericViewSet):
     """

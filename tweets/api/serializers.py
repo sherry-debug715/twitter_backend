@@ -12,12 +12,12 @@ class TweetSerializer(serializers.ModelSerializer):
     user = UserSerializerForTweet()
     #  If the field you want to include in the serialized output is not directly present in the model but can be derived or computed, you can use SerializerMethodField
     has_liked = serializers.SerializerMethodField()
-    comment_count = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Tweet
-        fields = ("id", "user", "created_at", "content", "comment_count", "likes_count", "has_liked")
+        fields = ("id", "user", "created_at", "content", "comments_count", "likes_count", "has_liked")
 
     def get_has_liked(self, obj):
         login_user = self.context["request"].user
@@ -27,7 +27,7 @@ class TweetSerializer(serializers.ModelSerializer):
         return obj.like_set.count()
     
     def get_comments_count(self, obj):
-        return obj.like_set.count()
+        return obj.comment_set.count()
 
 
 class TweetCreateSerializer(serializers.ModelSerializer):
@@ -52,4 +52,4 @@ class TweetSerializerWithComments(TweetSerializer):
 
     class Meta:
         model = Tweet
-        fields = ("id", "user", "comments", "created_at", "content", "likes", "likes_count", "comment_count", "has_liked")
+        fields = ("id", "user", "comments", "created_at", "content", "likes", "likes_count", "comments_count", "has_liked")

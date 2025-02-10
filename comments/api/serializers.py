@@ -14,7 +14,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ("id", "tweet_id", "user", "content", "created_at", "like_count", "has_liked",)
 
-    def get_liked_count(self, obj):
+    def get_like_count(self, obj):
         return obj.like_set.count()
     
     def get_has_liked(self, obj):
