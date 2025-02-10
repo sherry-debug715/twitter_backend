@@ -6,6 +6,7 @@ from tweets.models import Tweet
 from comments.models import Comment
 from likes.models import Like
 from newsfeeds.models import NewsFeed
+from utils.redis_client import RedisClient
 
 
 class TestCase(DjangoTestCase):
@@ -57,3 +58,7 @@ class TestCase(DjangoTestCase):
     
     def create_newsfeed(self, user, tweet):
         return NewsFeed.objects.create(user=user, tweet=tweet)
+    
+    def clear_cache(self):
+        RedisClient.clear()
+        
