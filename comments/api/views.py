@@ -36,7 +36,11 @@ class CommentViewSet(viewsets.GenericViewSet):
         # When you call self.get_queryset(), it starts by looking at self.queryset (if it's defined) and returns it as a queryset object that you can then modify or filter further.
         queryset = self.get_queryset()
         comments = self.filter_queryset(queryset).order_by("created_at")
-        serializer = CommentSerializer(comments, many=True)
+        serializer = CommentSerializer(
+            comments, 
+            context={"request": request},
+            many=True,
+        )
         return Response(
             {"comments": serializer.data},
             status=status.HTTP_200_OK,
@@ -58,8 +62,12 @@ class CommentViewSet(viewsets.GenericViewSet):
         
         # save method will invoke create method from CommentSerializerForCreate
         new_comment = serializer.save()
+        serializer = CommentSerializer(
+            new_comment,
+            context={"request": request},
+        )
         return Response(
-            CommentSerializer(new_comment).data,
+            serializer.data,
             status=status.HTTP_201_CREATED,
         )
     
@@ -76,9 +84,13 @@ class CommentViewSet(viewsets.GenericViewSet):
             }, status=status.HTTP_400_BAD_REQUEST) 
         
         # here save method will invoke the update method of CommentSerializerForUpdate, save will decide whether to invoke create method or update method based on the instance
-        comment = serializer.save()
+        edited_comment = serializer.save()
+        serializer = CommentSerializer(
+            edited_comment,
+            context={"request": request},
+        )
         return Response(
-            CommentSerializer(comment).data,
+            serializer.data,
             status=status.HTTP_200_OK,
         )
     

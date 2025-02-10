@@ -10,6 +10,13 @@ from .serializers import (
 )
 from newsfeeds.services import NewsFeedService
 from utils.decorators import required_params
+"""
+GET /api/tweets/ → calls the list() method
+GET /api/tweets/{id}/ → calls the retrieve() method (as in your case)
+POST /api/tweets/ → calls the create() method
+PUT /api/tweets/{id}/ → calls the update() method
+DELETE /api/tweets/{id}/ → calls the destroy() method
+"""
 
 class TweetViewSet(viewsets.GenericViewSet):
     """
@@ -29,7 +36,11 @@ class TweetViewSet(viewsets.GenericViewSet):
         tweets = Tweet.objects.filter(
             user_id = request.query_params["user_id"]
         ).order_by("-created_at") # -> returns a QuerySet
-        serializer = TweetSerializer(tweets, many=True)
+        serializer = TweetSerializer(
+            tweets, 
+            context={"request": request},
+            many=True
+        )
 
         # return tweets in json format 
         return Response({"tweets": serializer.data})
@@ -50,8 +61,13 @@ class TweetViewSet(viewsets.GenericViewSet):
             }, status=400) 
         tweet = serializer.save()
         NewsFeedService.fanout_to_followers(tweet)
-        return Response(TweetSerializer(tweet).data, status=201)
+        serializer = TweetSerializer(tweet, context={"request": request})
+        return Response(serializer.data, status=201)
     
     def retrieve(self, request, *args, **kwargs):
         tweet = self.get_object()
-        return Response(TweetSerializerWithComments(tweet).data)
+        serializer =  TweetSerializerWithComments(
+            tweet,
+            context={"request": request},
+        )
+        return Response(serializer.data)
