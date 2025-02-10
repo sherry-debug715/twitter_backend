@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from tweets.models import Tweet 
 from comments.models import Comment
 from likes.models import Like
+from newsfeeds.models import NewsFeed
 
 
 class TestCase(DjangoTestCase):
@@ -53,3 +54,6 @@ class TestCase(DjangoTestCase):
             user=user,
         )
         return instance
+    
+    def create_newsfeed(self, user, tweet):
+        return NewsFeed.objects.create(user=user, tweet=tweet)
