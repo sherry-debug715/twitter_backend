@@ -131,3 +131,30 @@ class LikeApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["comments"][0]["has_liked"], True)
         self.assertEqual(response.data["comments"][0]["like_count"], 2) 
+
+    def test_likes_in_tweets_api(self):
+        tweet = self.create_tweet(self.sherry)
+
+        # test tweet detail api 
+        url = TWEET_DETAIL_API.format(tweet.id)
+        response = self.panda_client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["has_liked"], False)
+        self.assertEqual(response.data["likes_count"], 0)
+        self.create_like(self.panda, tweet)
+        response = self.panda_client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["has_liked"], True)
+        self.assertEqual(response.data["likes_count"], 1)
+
+        # test tweet list api 
+        response = self.panda_client.get(TWEET_LIST_API, {"user_id": self.sherry.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["tweets"][0]["has_liked"], True)
+        self.assertEqual(response.data["tweets"][0]["likes_count"], 1)
+
+        # test likes details 
+        url = TWEET_DETAIL_API.format(tweet.id)
+        response = self.panda_client.get(url)
+        self.assertEqual(len(response.data["likes"]), 1)
+        self.assertEqual(response.data["likes"][0]["user"]["id"], self.panda.id)
