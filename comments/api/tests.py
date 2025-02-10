@@ -4,17 +4,15 @@ from django.utils import timezone
 from comments.models import Comment
 
 COMMENT_URL = "/api/comments/"
+TWEET_LIST_API = "/api/tweets/"
+TWEET_DETAIL_API = "/api/tweets/{}/"
+NEWSFEED_LIST_API = "/api/newsfeeds/"
 
 class CommentModelTests(TestCase):
 
     def setUp(self):
-        self.sherry = self.create_user("sherry")
-        self.sherry_client = APIClient()
-        self.sherry_client.force_authenticate(self.sherry)
-
-        self.panda = self.create_user("panda")
-        self.panda_client = APIClient()
-        self.panda_client.force_authenticate(self.panda)
+        self.sherry, self.sherry_client = self.create_user_and_client("sherry") 
+        self.panda, self.panda_client = self.create_user_and_client("panda")
 
         self.tweet = self.create_tweet(self.sherry)
         self.comment = self.create_comment(self.sherry, self.tweet, "1")
@@ -149,7 +147,30 @@ class CommentModelTests(TestCase):
 
         self.create_like(self.sherry, self.comment)
         self.assertEqual(self.comment.like_set.count(), 2)
-        
+
+    def test_comments_count(self):
+        # test tweet detail api 
+        tweet = self.create_tweet(self.sherry, "first tweet from sherry")
+        tweet_detail_url = TWEET_DETAIL_API.format(tweet.id)
+        response = self.panda_client.get(tweet_detail_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["comments_count"], 0) 
+
+        # test tweet list api 
+        self.create_comment(self.panda, tweet, "first comment from panda to sherry tweet")
+        response = self.panda_client.get(tweet_detail_url)
+        response = self.panda_client.get(TWEET_LIST_API, {"user_id": self.sherry.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["tweets"][0]["comments_count"], 1)
+
+        # test newsfeed list api 
+        self.create_comment(self.sherry, tweet)
+        self.create_newsfeed(self.panda, tweet)
+        response = self.panda_client.get(NEWSFEED_LIST_API)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["newsfeeds"][0]["tweet"]["comments_count"], 2)
+
+
 
 
 
