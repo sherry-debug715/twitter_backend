@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-
+import sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -107,6 +107,14 @@ DATABASES = {
         "PASSWORD": "password"
     }
 }
+
+TESTING = ((" ".join(sys.argv)).find('manage.py test') != -1)
+# Redis
+
+REDIS_HOST = "redis" # use the redis service in Docker
+REDIS_PORT = 6379 # default redis port 
+REDIS_DB = 0 if TESTING else 1
+REDIS_KEY_EXPIRE_TIME = 7 * 86400  # 7 Days
 
 
 # Password validation
