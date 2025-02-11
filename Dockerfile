@@ -10,9 +10,12 @@ RUN apt-get update && apt-get install -y default-mysql-client
 # Create and set the working directory
 RUN mkdir /code
 WORKDIR /code
+
 COPY requirements-prd.txt /code/
 COPY requirements-dev.txt /code/   
+
 RUN pip install -i https://mirrors.aliyun.com/pypi/simple -r requirements-prd.txt
 RUN pip install -i https://mirrors.aliyun.com/pypi/simple -r requirements-dev.txt 
+
 COPY . /code/
 

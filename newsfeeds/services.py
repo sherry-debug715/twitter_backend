@@ -1,5 +1,7 @@
 from newsfeeds.models import NewsFeed
-from friendships.services import FriendshipService 
+from newsfeeds.tasks import fanout_newsfeeds_main_task 
+from twitter.cache import USER_NEWSFEEDS_PATTERN
+from utils.redis_helper import RedisHelper
 
 
 class NewsFeedService(object):
@@ -18,9 +20,11 @@ class NewsFeedService(object):
         """
 
         # Correct method, using bulk create 
-        newsfeeds = [
-            NewsFeed(user=follower, tweet=tweet) 
-            for follower in FriendshipService.get_followers(tweet.user)
-        ]
-        newsfeeds.append(NewsFeed(user=tweet.user, tweet=tweet))
-        NewsFeed.objects.bulk_create(newsfeeds)
+        fanout_newsfeeds_main_task.delay(tweet.id, tweet.user_id) 
+
+    
+    @classmethod
+    def push_newsfeed_to_cache(cls, newsfeed):
+        queryset = NewsFeed.object.filter(user_id=newsfeed.user_id).order_by("-created_at")
+        key = USER_NEWSFEEDS_PATTERN.format(user_id=newsfeed.user_id)
+        return RedisHelper.load_objects(key, queryset)
