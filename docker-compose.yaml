@@ -42,7 +42,20 @@ services:
       - "11211:11211" # Default Memcached port mapping.
     networks:
       - shared_network
-  
+
+  celery_worker:
+    container_name: celery_worker
+    build: .
+    command: celery -A twitter.celery worker --loglevel=info 
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      - PYTHONPATH=/code
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    networks:
+      - shared_network
+
   twitter:
     container_name: twitter
     image: sherry/twitter
@@ -60,6 +73,8 @@ services:
         condition: service_started
     environment:
       - DB_HOST=mysql8
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     networks:
       - shared_network
 

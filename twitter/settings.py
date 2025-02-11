@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+from kombu import Queue
 from pathlib import Path
 import sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -115,7 +115,15 @@ REDIS_HOST = "redis" # use the redis service in Docker
 REDIS_PORT = 6379 # default redis port 
 REDIS_DB = 0 if TESTING else 1
 REDIS_KEY_EXPIRE_TIME = 7 * 86400  # 7 Days
+REDIS_LIST_LENGTH_LIMIT = 1000 if not TESTING else 20
 
+CELERY_BROKER_URL = 'redis://redis:6379/2' if not TESTING else 'redis://redis:6379/0'
+CELERY_TIMEZONE = "UTC"
+CELERY_TASK_ALWAYS_EAGER = TESTING
+CELERY_QUEUES = (
+    Queue("default", routing_key="default"),
+    Queue("newsfeeds", routing_key="newsfeeds"),
+)
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
