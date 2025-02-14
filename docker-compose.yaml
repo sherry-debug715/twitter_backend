@@ -44,7 +44,7 @@ services:
       - shared_network
 
   celery_worker:
-    container_name: celery_worker
+    container_name: celery
     build: .
     command: celery -A twitter.celery worker --loglevel=info 
     depends_on:
