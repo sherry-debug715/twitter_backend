@@ -54,9 +54,10 @@ class TweetViewSet(viewsets.GenericViewSet):
             context={"request":request},
         )
         if not serializer.is_valid():
+            error_msg = serializer.errors.get("non_field_errors", ["Please check input"])[0]
             return Response({
                 "success": False,
-                "message": "Please check input",
+                "message": error_msg,
                 "errors": serializer.errors,
             }, status=400) 
         tweet = serializer.save()

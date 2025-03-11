@@ -1,7 +1,9 @@
 from rest_framework.test import APIClient 
 
 from testing.testcase import TestCase
-from tweets.models import Tweet 
+from tweets.models import Tweet, TweetPhoto
+from django.core.files.uploadedfile import SimpleUploadedFile
+from tweets.constants import TWEET_PHOTOS_UPLOAD_LIMIT
 
 
 TWEET_LIST_API = "/api/tweets/"
@@ -98,6 +100,72 @@ class TweetApiTests(TestCase):
         self.create_comment(self.user1, tweet, "hmmmm")
         response = self.anonymous_client.get(url)
         self.assertEqual(len(response.data["comments"]), 2)
+
+    def test_create_with_files(self):
+        # TEST 1: without files 
+        response = self.user1_client.post(TWEET_CREATE_API, {
+            "content": "Hello World, this is my first tweet",
+        })
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["user"]["id"], self.user1.id) 
+        self.assertEqual(TweetPhoto.objects.count(), 0)
+
+        # TEST 2: with one file 
+        # content needs to be bytes type, therefore, using str.encode() to convert string to bytes
+        file = SimpleUploadedFile(
+            name="test_image.jpg",
+            content=str.encode("a fake image"),
+            content_type="image/jpeg"
+        )
+        response = self.user1_client.post(TWEET_CREATE_API, {
+            "content": "Hello World, this is my second tweet",
+            "files": [file],
+        })
+        self.assertEqual(response.status_code, 201) 
+        self.assertEqual(TweetPhoto.objects.count(), 1) 
+
+        # TEST 3: with multiple files
+        file1 = SimpleUploadedFile(
+            name="test_image1.jpg",
+            content=str.encode("a fake image"),
+            content_type="image/jpeg"
+        )
+        file2 = SimpleUploadedFile(
+            name="test_image2.jpg",
+            content=str.encode("a fake image"),
+            content_type="image/jpeg"
+        )
+        response = self.user1_client.post(TWEET_CREATE_API, {
+            "content": "Hello World, this is my third tweet",
+            "files": [file1, file2],
+        })  
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(TweetPhoto.objects.count(), 3)
+
+        retrive_url = TWEET_RETRIEVE_API.format(response.data["id"])
+        response = self.user1_client.get(retrive_url)
+        self.assertEqual(len(response.data["photo_urls"]), 2)
+        self.assertEqual("test_image1" in response.data["photo_urls"][0], True)
+        self.assertEqual("test_image2" in response.data["photo_urls"][1], True)
+
+        # TEST 4: with too many files 
+        files = [
+            SimpleUploadedFile(
+                name="test_image{}.jpg".format(i),
+                content=str.encode("a fake image"),
+                content_type="image/jpeg"
+            )
+            for i in range(10)
+        ]
+        response = self.user1_client.post(TWEET_CREATE_API, {
+            "content": "Hello World, this is my forth tweet",
+            "files": files,
+        })
+        self.assertEqual(response.status_code, 400) 
+        self.assertEqual(TweetPhoto.objects.count(), 3)
+        self.assertEqual(response.data["message"], f"You can't upload more than {TWEET_PHOTOS_UPLOAD_LIMIT} photos in a tweet.")
+
+
 
 
 
