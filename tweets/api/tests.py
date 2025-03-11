@@ -84,16 +84,22 @@ class TweetApiTests(TestCase):
 
         # New tweet should have 0 comment
         tweet = self.create_tweet(self.user1)
+        profile = self.user1.profile
         url = TWEET_RETRIEVE_API.format(tweet.id)
         response = self.anonymous_client.get(url) 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["comments"]), 0)
+        # Check if tweet contains avatar and nickname 
+        self.assertEqual(response.data["user"]["nickname"], profile.nickname)
+        self.assertEqual(response.data["user"]["avatar_url"], None)
 
         # Check if comments count is correct
         self.create_comment(self.user2, tweet, "panda is cute")
         self.create_comment(self.user1, tweet, "hmmmm")
         response = self.anonymous_client.get(url)
         self.assertEqual(len(response.data["comments"]), 2)
+
+
 
 
 

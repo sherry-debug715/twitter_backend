@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from kombu import Queue
 from pathlib import Path
 import sys
+import environ
+
+env = environ.Env()
+root_path = environ.Path(__file__) - 2
+env.read_env(str(root_path.path(".env")))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -97,13 +102,24 @@ WSGI_APPLICATION = "twitter.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
+# DATABASES = { # For Docker setting
+#     "default": {
+#         "ENGINE": "django.db.backends.mysql",
+#         "NAME": "twitter",
+#         "HOST": "mysql8", # container ip: mysql8 localhost: 127.0.0.1
+#         "PORT": "3306", # Mysql default port 
+#         "USER": "root",
+#         "PASSWORD": "password"
+#     }
+# }
+
+DATABASES = { # For local setting
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "twitter",
-        "HOST": "mysql8", # container ip: mysql8 localhost: 127.0.0.1
+        "HOST": "localhost", # container ip: mysql8 localhost: 127.0.0.1
         "PORT": "3306", # Mysql default port 
-        "USER": "root",
+        "USER": "twitter_user",
         "PASSWORD": "password"
     }
 }
@@ -111,13 +127,14 @@ DATABASES = {
 TESTING = ((" ".join(sys.argv)).find('manage.py test') != -1)
 # Redis
 
-REDIS_HOST = "redis" # use the redis service in Docker
+# REDIS_HOST = "redis" # use the redis service in Docker
+REDIS_HOST = "localhost" # use the redis service locally
 REDIS_PORT = 6379 # default redis port 
 REDIS_DB = 0 if TESTING else 1
 REDIS_KEY_EXPIRE_TIME = 7 * 86400  # 7 Days
 REDIS_LIST_LENGTH_LIMIT = 1000 if not TESTING else 20
 
-CELERY_BROKER_URL = 'redis://redis:6379/2' if not TESTING else 'redis://redis:6379/0'
+CELERY_BROKER_URL = 'redis://localhost:6379/2' if not TESTING else 'redis://localhost:6379/0'
 CELERY_TIMEZONE = "UTC"
 CELERY_TASK_ALWAYS_EAGER = TESTING
 CELERY_QUEUES = (
@@ -160,6 +177,28 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+# media 的作用适用于存放被用户上传的文件信息
+# 当我们使用默认 FileSystemStorage 作为 DEFAULT_FILE_STORAGE 的时候
+# 文件会被默认上传到 MEDIA_ROOT 指定的目录下
+# media 和 static 的区别是：
+# - static 里通常是 css,js 文件之类的静态代码文件，是用户可以直接访问的代码文件
+# - media 里使用户上传的数据文件，而不是代码
+MEDIA_ROOT = 'media/'
+
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+TESTING = ((" ".join(sys.argv)).find('manage.py test') != -1)
+if TESTING:
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION = env("AWS_S3_REGION", default='us-east-1')
+
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

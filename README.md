@@ -78,3 +78,45 @@ Run tests inside the Docker container:
     ```
 ---
 
+```python
+    # Custom display functions: show associated file name on each row, if any.
+    def display_linked_file(self, obj):
+        def formatFileName(file_name):
+            if not len(file_name) > 1:
+                return ""
+            email_filename = file_name.split(" - ")
+            if not len(email_filename) > 1:
+                return ""
+            file_name = email_filename[1].split("_")
+            formated_fileName = ""
+            for i in range(1, len(file_name)):
+                formated_fileName += file_name[i] + "_"
+            return formated_fileName[:-1]
+   
+        linked_files = []
+        # Check the forward relationship first.
+        if hasattr(obj, 'linked_video_file'):
+            attr = obj.linked_video_file
+            if callable(getattr(attr, "all", None)):
+                qs = attr.all() 
+                if qs.exists():
+                    linked_files.extend(qs)
+            elif attr: # If there is only one linked file
+                linked_files.append(attr) 
+        # Otherwise, try the reverse relationship.
+        if not linked_files and hasattr(obj, 'linked_media'):
+            attr = obj.linked_media
+            if callable(getattr(attr, "all", None)):
+                qs = attr.all() 
+                if qs.exists():
+                    linked_files.extend(qs)
+            elif attr: # If there is only one linked file
+                linked_files.append(attr)
+        
+        formatted_names = [formatFileName(str(file)) for file in linked_files if formatFileName(str(file))]
+
+        return format_html('<br>'.join(formatted_names)) if formatted_names else "-"
+
+    display_linked_file.short_description = "Linked File Name"
+```
+

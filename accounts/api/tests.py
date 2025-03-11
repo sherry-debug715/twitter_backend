@@ -1,5 +1,6 @@
-from django.test import TestCase
+from utils.tests import TestCase
 from rest_framework.test import APIClient
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User 
 
 
@@ -7,6 +8,7 @@ LOGIN_URL = "/api/accounts/login/"
 LOGOUT_URL = "/api/accounts/logout/"
 SIGNUP_URL = "/api/accounts/signup/"
 LOGIN_STATUS_URL = "/api/accounts/login_status/"
+USER_PROFILE_DETAIL_URL = "/api/profiles/{}/"
 
 
 class AccountApiTests(TestCase):
@@ -50,7 +52,7 @@ class AccountApiTests(TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response.data["user"], None)
-        self.assertEqual(response.data["user"]["email"], "test_user@gamil.com") 
+        self.assertEqual(response.data["user"]["id"], self.user.id) 
 
         # Test5: Recheck login status -> True 
         response = self.client.get(LOGIN_STATUS_URL)
@@ -96,7 +98,7 @@ class AccountApiTests(TestCase):
             "email": "wrong gmail",
             "password": "password"
         })
-        # print(response.data)
+
         self.assertEqual(response.status_code, 400) 
 
         # Test 3: password input < 6 
@@ -105,7 +107,7 @@ class AccountApiTests(TestCase):
             "email": "newuser@gmail.com",
             "password": "123"
         })
-        # print(response.data)
+
         self.assertEqual(response.status_code, 400) 
 
         # Test 3: username > 20
@@ -114,18 +116,55 @@ class AccountApiTests(TestCase):
             "email": "newuser@gmail.com",
             "password": "password"
         })
-        # print(response.data)
+
         self.assertEqual(response.status_code, 400) 
 
         # Test 4: sign up successful 
         response = self.client.post(SIGNUP_URL, data)
         self.assertEqual(response.status_code, 201) 
         self.assertEqual(response.data["user"]["username"], "newuser")
-        self.assertEqual(response.data["user"]["email"], "newuser@gmail.com")
 
         # Test 5: test login status to be True 
         response = self.client.get(LOGIN_STATUS_URL)
         self.assertEqual(response.data["has_logged_in"], True) 
+
+
+class UserProfileAPITest(TestCase):
+
+    def test_update(self):
+        sherry, sherry_client = self.create_user_and_client("sherry")
+        profile = sherry.profile 
+        profile.nickname = "sherry nickname"
+        profile.save() 
+
+        url = USER_PROFILE_DETAIL_URL.format(profile.id)
+
+        # Test 1: update profile can only be done by the owner
+        _, panda_client = self.create_user_and_client("panda")
+        response = panda_client.put(url, {
+            "nickname": "panda nickname",
+        })
+        self.assertEqual(response.status_code, 403) 
+        profile.refresh_from_db()
+        self.assertEqual(profile.nickname, "sherry nickname")
+
+        # Test 2: update profile with correct user
+        response = sherry_client.put(url, {
+            "avatar": SimpleUploadedFile(
+                name="test_image.jpg",
+                content=str.encode("a fake image"),
+                content_type="image/jpeg"
+            ),
+            "nickname": "sherry new nickname",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual("test_image" in response.data["avatar"], True)
+        self.assertEqual(response.data["nickname"], "sherry new nickname")
+        profile.refresh_from_db()
+        self.assertIsNotNone(profile.avatar)
+
+
 
 
 

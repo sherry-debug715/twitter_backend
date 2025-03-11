@@ -44,12 +44,20 @@ class TweetCreateSerializer(serializers.ModelSerializer):
         return tweet
     
 
-class TweetSerializerWithComments(TweetSerializer):
-    # In Django, when you define a reverse relationship (such as Comment related to Tweet), Django automatically creates a related manager on the Tweet model. By default, this related manager is named <model_name>_set (where model_name is the lowercase name of the related model, in this case, comment).
-    # The source="comment_set" tells Django to use the comment_set related manager to retrieve all comments associated with the Tweet instance. The many=True argument tells Django that there could be multiple comments, so it will serialize them as a list.
+class TweetSerializerForDetail(TweetSerializer):
     comments = CommentSerializer(source="comment_set", many=True)
     likes = LikeSerializer(source="like_set", many=True)
-
+    
     class Meta:
         model = Tweet
-        fields = ("id", "user", "comments", "created_at", "content", "likes", "likes_count", "comments_count", "has_liked")
+        fields = (
+            "id", 
+            "user", 
+            "created_at", 
+            "content", 
+            "comments", 
+            "likes", 
+            "comments_count", 
+            "likes_count", 
+            "has_liked"
+            )
