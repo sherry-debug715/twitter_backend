@@ -8,35 +8,29 @@ from django.contrib.auth import (
     login as django_login,
 )
 
-from .serializers import UserSerializer, LoginSerializer, SignupSerializer
+from .serializers import (
+    UserSerializer, 
+    LoginSerializer, 
+    SignupSerializer,
+    UserSerializerWithProfile,
+    UserProfileSerializerForUpdate,
+)
+from accounts.models import UserProfile
+from utils.permissions import IsObjectOwner
 
-
-class UserViewSet(
-    viewsets.ModelViewSet
-):  # ModelViewSet allows user to operate CRUD, can change it to ReadOnlyModelViewSet
+class UserViewSet(viewsets.ReadOnlyModelViewSet):  # ModelViewSet allows user to operate CRUD, can change it to ReadOnlyModelViewSet
     """
     API endpoint that allows users to be viewed or edited
     """
 
     queryset = User.objects.all().order_by("-date_joined")
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializerWithProfile
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class AccountViewSet(viewsets.ViewSet):
-    serializer_class = LoginSerializer
-
-    @action(
-        methods=["GET"], detail=False
-    )  # when setting primary key or other params, detail need to be set to True
-    def login_status(self, request):
-        data = {
-            "has_logged_in": request.user.is_authenticated,
-            "ip": request.META["REMOTE_ADDR"]
-        }
-        if request.user.is_authenticated:
-            data["user"] = UserSerializer(request.user).data
-        return Response(data)  # Response default status code is 200
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = SignupSerializer
 
     @action(methods=["POST"], detail=False)
     def logout(self, request):
@@ -87,5 +81,25 @@ class AccountViewSet(viewsets.ViewSet):
             )
 
         user = serializer.save()
+
+        # Create user profile when a new user is created
+        user.profile
         django_login(request, user)
         return Response({"success": True, "user": UserSerializer(user).data}, status=201)
+    
+    @action(methods=["GET"], detail=False)
+    def login_status(self, request):
+        data = {"has_logged_in": request.user.is_authenticated}
+        if data["has_logged_in"]:
+            data["user"] = UserSerializer(request.user).data
+        return Response(data)
+    
+
+class UserProfileViewSet(
+    viewsets.GenericViewSet, viewsets.mixins.UpdateModelMixin
+):
+    queryset = UserProfile
+    permission_classes = (IsObjectOwner,)
+    serializer_class = UserProfileSerializerForUpdate
+
+
